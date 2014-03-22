@@ -71,6 +71,8 @@ public class ConceptFormValidator implements Validator {
 			
 			boolean foundAtLeastOneFullySpecifiedName = false;
 			
+			boolean foundAtleastOneDescription = false;
+			
 			for (Locale locale : backingObject.getLocales()) {
 				
 				for (int x = 0; x < backingObject.getSynonymsByLocale().get(locale).size(); x++) {
@@ -102,10 +104,24 @@ public class ConceptFormValidator implements Validator {
 					errors.rejectValue("namesByLocale[" + locale + "].name", "Concept.fullySpecified.textRequired");
 					localesWithErrors.add(locale.getDisplayName());
 				}
+				//validate that at least one Concept Description in a locale is non-empty
+				if (StringUtils.isNotEmpty(backingObject.getDescriptionsByLocale().get(locale).getDescription())) {
+					foundAtleastOneDescription = true;
+				} else if (backingObject.getDescriptionsByLocale().get(locale).getConceptDescriptionId() != null) {
+					// if this is a new ConceptDescription and user has changed it into an empty string, reject it
+					
+					errors.rejectValue("descriptionsByLocale[" + locale + "].description",
+					    "Concept.Description.existingdescription.empty");
+					localesWithErrors.add(locale.getDisplayName());
+				}
 			}
 			
 			if (!foundAtLeastOneFullySpecifiedName) {
 				errors.reject("Concept.name.atLeastOneRequired");
+			}
+			
+			if (!foundAtleastOneDescription) {
+				errors.reject("Concept.Description.atLeastOneRequired");
 			}
 			
 		}
